@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "633771213108",
+    "project_id": "studytrack-ilayda",
+    "storage_bucket": "studytrack-ilayda.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:633771213108:android:f82ef853e1bda9497a2561",
+        "android_client_info": {
+          "package_name": "com.example.study_track"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4Ae4q6Td4t9ooh5RvXPlD1jkWzkkAzEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

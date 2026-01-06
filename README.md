@@ -1,16 +1,97 @@
-# study_track
+# 📚 StudyTrack
 
-A new Flutter project.
+**StudyTrack**, üniversite öğrencilerinin ders çalışma sürelerini takip etmelerini, hedeflerini yönetmelerini ve topluluk desteğiyle motivasyonlarını artırmalarını sağlayan **Flutter & Firebase** tabanlı bir mobil uygulamadır.
 
-## Getting Started
+Mobil Programlama dersi final projesi olarak geliştirilmiştir.
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 Proje Özellikleri
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Uygulama, aşağıdaki temel ve gelişmiş özellikleri eksiksiz içermektedir:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🔐 1. Kimlik Doğrulama (Authentication)
+* **Kayıt Ol / Giriş Yap:** Firebase Auth altyapısı ile güvenli giriş.
+* **Şifremi Unuttum:** E-posta adresine şifre sıfırlama bağlantısı gönderme.
+* **Oturum Yönetimi:** Uygulama açıldığında oturumun hatırlanması.
+
+### 🏠 2. Ana Sayfa (Dashboard)
+* **Canlı Veri:** O günkü toplam çalışma süresinin anlık takibi.
+* **Hedef ve İlerleme:** Günlük hedef belirleme (örn: 120 dk) ve yüzdesel ilerleme çubuğu (Progress Bar).
+* **Yapılacaklar Listesi (To-Do):** Günlük görevleri ekleme, tamamlama ve silme.
+
+### ⏱️ 3. Çalışma Zamanlayıcısı (Timer)
+* **Kronometre:** Ders seçerek süre tutma ve kaydetme.
+* **Manuel Ekleme:** Süre tutulmayan çalışmaları geriye dönük olarak (Ders adı ve dakika girerek) sisteme ekleme özelliği.
+
+### 📊 4. İstatistikler
+* **Haftalık Analiz:** Son 7 günün çalışma verilerini gösteren Sütun Grafik (Bar Chart).
+* **Ders Bazlı Özet:** Hangi derse toplam kaç dakika çalışıldığını gösteren detaylı liste.
+
+### 💬 5. Topluluk (Community)
+* **Sosyal Akış:** Öğrencilerin motivasyon mesajları paylaştığı alan.
+* **Resimli Paylaşım:** Mesajlara **görsel (fotoğraf)** ekleme özelliği (Firebase Storage).
+* **Canlı Akış:** Diğer kullanıcıların paylaşımlarını anlık görüntüleme.
+
+### 👤 6. Profil ve Ayarlar
+* **Profil Yönetimi:** Ad, Soyad ve Bölüm bilgilerini güncelleme.
+* **Fotoğraf Yükleme:** Galeriden profil fotoğrafı seçip buluta yükleme.
+* **🌙 Karanlık Mod (Dark Mode):** Uygulama içi tema değiştirme (Light/Dark).
+
+---
+
+## 🛠️ Kullanılan Teknolojiler
+
+Bu proje **Flutter** kullanılarak geliştirilmiş olup, Backend servisi olarak **Google Firebase** kullanılmıştır.
+
+* **Dil:** Dart
+* **Framework:** Flutter
+* **Backend:** Firebase (Authentication, Firestore, Storage)
+* **Mimari:** Modüler Dosya Yapısı (MVC Prensibine uygun ekran/widget ayrımı)
+
+### 📦 Kullanılan Paketler (Dependencies)
+* `firebase_auth`: Kimlik doğrulama işlemleri.
+* `cloud_firestore`: NoSQL veritabanı işlemleri.
+* `firebase_storage`: Fotoğraf depolama.
+* `fl_chart`: İstatistik grafikleri.
+* `image_picker`: Galeriden resim seçimi.
+* `intl`: Tarih ve saat formatlama.
+* `flutter_native_splash`: Özel açılış ekranı.
+
+---
+
+## ⚙️ Kurulum ve Çalıştırma
+
+Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımlar izlenmelidir:
+
+1.  **Depoyu Klonlayın:**
+    ```bash
+    git clone [https://github.com/ilaydakyldzz/study_track.git](https://github.com/ilaydakyldzz/study_track.git)
+    ```
+
+2.  **Proje Klasörüne Gidin:**
+    ```bash
+    cd study_track
+    ```
+
+3.  **Paketleri Yükleyin:**
+    ```bash
+    flutter pub get
+    ```
+
+4.  **Firebase Kurulumu:**
+    * Bu proje Firebase bağlantısı gerektirir. `google-services.json` dosyasının `android/app/` dizininde olduğundan emin olun.
+
+5.  **Uygulamayı Başlatın:**
+    ```bash
+    flutter run
+    ```
+
+---
+
+## 📄 Lisans ve Hazırlayan
+
+Bu proje **Mobil Programlama Dersi Final Ödevi** kapsamında hazırlanmıştır.
+
+**Geliştirici:** İlayda AKYILDIZ
+**Öğrenci No:** 22060366  

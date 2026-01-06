@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fl_chart/fl_chart.dart'; // Grafik kütüphanesi
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -11,11 +11,9 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen> {
-  // Haftanın günleri (Pazartesi=0, Salı=1...)
   final List<String> _weekDays = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-  
-  // Her gün için çalışma süresi (Dakika cinsinden)
-  List<double> _weeklyStudyData = [0, 0, 0, 0, 0, 0, 0]; 
+  List<double> _weeklyStudyData = [0, 0, 0, 0, 0, 0, 0];
+  Map<String, int> _subjectSummary = {}; // Ders bazlı toplam süreler
   bool _isLoading = true;
 
   @override
@@ -24,35 +22,47 @@ class _StatsScreenState extends State<StatsScreen> {
     _fetchWeeklyData();
   }
 
-  // Veritabanından verileri çekip hesaplayan fonksiyon
   Future<void> _fetchWeeklyData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    DateTime now = DateTime.now();
-    
-    // Veritabanından bu kullanıcının tüm kayıtlarını çek
+    // Sadece bu haftanın değil, genel istatistikleri çekelim
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('study_sessions')
         .where('userId', isEqualTo: user.uid)
         .get();
 
     List<double> tempData = [0, 0, 0, 0, 0, 0, 0];
+    Map<String, int> tempSubjects = {};
+    DateTime now = DateTime.now();
+    // Basitlik adına son 7 güne odaklanalım grafik için
+    DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
 
     for (var doc in snapshot.docs) {
       var data = doc.data() as Map<String, dynamic>;
       Timestamp? timestamp = data['date'];
       int durationSeconds = data['durationSeconds'] ?? 0;
+      String subject = data['subject'] ?? 'Diğer';
 
       if (timestamp != null) {
         DateTime date = timestamp.toDate();
-        // Basitçe haftanın gününe (Pzt-Paz) göre listeye ekliyoruz
-        int dayIndex = date.weekday - 1; // 0=Pzt, 6=Paz
-        double durationMinutes = durationSeconds / 60;
-        
-        // Hata olmasın diye kontrol (indeks 0-6 arasında mı?)
-        if (dayIndex >= 0 && dayIndex < 7) {
-           tempData[dayIndex] += durationMinutes;
+        int durationMinutes = durationSeconds ~/ 60;
+
+        // 1. Grafik Verisi (Bu hafta)
+        // Basit mantık: kaydın haftası ile bu hafta aynı mı?
+        // Daha detaylı kontrol yapılabilir ama demo için yeterli.
+        if (date.isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
+           int dayIndex = date.weekday - 1;
+           if (dayIndex >= 0 && dayIndex < 7) {
+             tempData[dayIndex] += durationMinutes;
+           }
+        }
+
+        // 2. Ders Özeti (Genel Toplam)
+        if (tempSubjects.containsKey(subject)) {
+          tempSubjects[subject] = tempSubjects[subject]! + durationMinutes;
+        } else {
+          tempSubjects[subject] = durationMinutes;
         }
       }
     }
@@ -60,6 +70,7 @@ class _StatsScreenState extends State<StatsScreen> {
     if (mounted) {
       setState(() {
         _weeklyStudyData = tempData;
+        _subjectSummary = tempSubjects;
         _isLoading = false;
       });
     }
@@ -67,26 +78,22 @@ class _StatsScreenState extends State<StatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Grafik için tavan değer hesaplama (En az 10 olsun ki boşken grafik çökmesin)
     double maxY = _weeklyStudyData.reduce((a, b) => a > b ? a : b);
     if (maxY < 10) maxY = 10; else maxY += 10;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Haftalık İlerleme")),
+      appBar: AppBar(title: const Text("İstatistikler")),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Günlük Çalışma Sürelerin (Dakika)",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 40),
-                  
-                  // GRAFİK ALANI
-                  Expanded(
+                  const Text("Haftalık Çalışma (Dakika)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 200,
                     child: BarChart(
                       BarChartData(
                         alignment: BarChartAlignment.spaceAround,
@@ -94,14 +101,9 @@ class _StatsScreenState extends State<StatsScreen> {
                         barTouchData: BarTouchData(
                           enabled: true,
                           touchTooltipData: BarTouchTooltipData(
-                            // HATA BURADAYDI, DÜZELTİLDİ:
-                            tooltipBgColor: Colors.blueGrey, 
-                            tooltipPadding: const EdgeInsets.all(8),
+                            tooltipBgColor: Colors.blueGrey,
                             getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                              return BarTooltipItem(
-                                '${rod.toY.round()} dk',
-                                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                              );
+                              return BarTooltipItem('${rod.toY.round()} dk', const TextStyle(color: Colors.white));
                             },
                           ),
                         ),
@@ -112,13 +114,7 @@ class _StatsScreenState extends State<StatsScreen> {
                               showTitles: true,
                               getTitlesWidget: (double value, TitleMeta meta) {
                                 if (value.toInt() >= 0 && value.toInt() < _weekDays.length) {
-                                   return SideTitleWidget(
-                                    axisSide: meta.axisSide,
-                                    child: Text(
-                                      _weekDays[value.toInt()],
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                                    ),
-                                  );
+                                   return SideTitleWidget(axisSide: meta.axisSide, child: Text(_weekDays[value.toInt()], style: const TextStyle(fontSize: 10)));
                                 }
                                 return const SizedBox();
                               },
@@ -133,40 +129,39 @@ class _StatsScreenState extends State<StatsScreen> {
                         barGroups: List.generate(7, (index) {
                           return BarChartGroupData(
                             x: index,
-                            barRods: [
-                              BarChartRodData(
-                                toY: _weeklyStudyData[index],
-                                color: Colors.indigo,
-                                width: 16,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ],
+                            barRods: [BarChartRodData(toY: _weeklyStudyData[index], color: Colors.indigo, width: 14, borderRadius: BorderRadius.circular(4))],
                           );
                         }),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // Özet Bilgi Kartı
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.indigo.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.insights, color: Colors.indigo),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            "Bu hafta toplam ${(_weeklyStudyData.reduce((a, b) => a + b)).toStringAsFixed(1)} dakika çalıştın.",
-                            style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 40),
+                  
+                  // --- YENİ EKLENEN: DERS BAZLI ÖZET ---
+                  const Text("Ders Bazlı Toplam Süreler", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  _subjectSummary.isEmpty 
+                  ? const Text("Henüz veri yok.")
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _subjectSummary.length,
+                      itemBuilder: (context, index) {
+                        String key = _subjectSummary.keys.elementAt(index);
+                        int value = _subjectSummary[key]!;
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.indigo.shade50,
+                              child: const Icon(Icons.book, color: Colors.indigo),
+                            ),
+                            title: Text(key, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            trailing: Text("$value dk", style: const TextStyle(fontSize: 16, color: Colors.indigo)),
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  )
                 ],
               ),
             ),
